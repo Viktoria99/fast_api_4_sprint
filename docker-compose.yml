@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16.0
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ./etl/movies.sql:/docker-entrypoint-initdb.d/movies.sql:ro
+    restart: always
+    ports:
+      - "5430:5432"
+    env_file:
+      - ./etl/.env
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.2
+    container_name: elasticsearch_test
+    ports:
+      - "9250:9200"
+    environment:
+      - discovery.type=single-node
+  
+  redis:
+    image: redis:7-alpine
+    container_name: redis_test
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  etl_service:
+    build:
+      context: ./etl
+      dockerfile: Dockerfile
+    env_file:
+      - ./etl/.env
+    depends_on:
+      - postgres
+      - elasticsearch
+  api:
+    build:
+      context: ./searchfilms
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./searchfilms/.env
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+  
+volumes:
+  postgres_data:
+  redis_data:
