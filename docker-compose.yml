@@ -6,7 +6,7 @@ services:
       - ./etl/movies.sql:/docker-entrypoint-initdb.d/movies.sql:ro
     restart: always
     ports:
-      - "5430:5432"
+      - "5432:5432"
     env_file:
       - ./etl/.env
 
