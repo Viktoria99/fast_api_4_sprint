@@ -12,15 +12,16 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.6.2
-    container_name: elasticsearch_test
+    container_name: elasticsearch_api
     ports:
       - "9200:9200"
     environment:
       - discovery.type=single-node
+      - xpack.security.enabled=false
   
   redis:
     image: redis:7-alpine
-    container_name: redis_test
+    container_name: redis_api
     restart: always
     ports:
       - "6379:6379"
