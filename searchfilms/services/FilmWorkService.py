@@ -25,11 +25,11 @@ class FilmWorkService:
                     film_fields['id'],
                     film_fields['title'],
                     film_fields['description'],
-                    0.0,
+                    film_fields['imdb_rating'],
                 )
             except NotFoundError:
                 return None
-        return FilmWork(data['id'], data['title'], data['description'], 0.0)
+        return FilmWork(data['id'], data['title'], data['description'], data['imdb_rating'])
 
     async def search_films(
         self, request: FilmRequest

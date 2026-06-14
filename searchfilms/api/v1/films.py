@@ -1,4 +1,4 @@
-from typing import Annotated, List
+from typing import Annotated, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -25,12 +25,13 @@ def is_valid_uuid(uuid_to_test, version=4):
 )
 async def film_details(
     film_id: str, film_service: FilmWorkService = Depends(film_service_di)
-) -> FilmResponse:
+) -> Optional[FilmResponse]:
     if is_valid_uuid(film_id) == True:
         film = await film_service.get_film(film_id)
-        return FilmResponse(
-            uuid=str(film.id), title=film.title, imdb_rating=film.rating
-        )
+        if film:
+            return FilmResponse(
+                uuid=str(film.id), title=film.title, imdb_rating=film.rating
+            )
     return None
 
 
