@@ -3,7 +3,7 @@ services:
     image: postgres:16.0
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-      - ./etl/movies.sql:/docker-entrypoint-initdb.d/movies.sql:ro
+      - ./sql:/docker-entrypoint-initdb.d/
     restart: always
     ports:
       - "5430:5432"
