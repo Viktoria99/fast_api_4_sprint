@@ -19,7 +19,9 @@ def main():
         / settings.elt_settings.state_path
     )
     db_pool = ConnectionPool(
-        conninfo='dbname={db} user={us} password={pas}'.format(
+        conninfo='host={host} port={port} dbname={db} user={us} password={pas}'.format(
+            host=settings.database_settings.host,
+            port=settings.database_settings.port,
             db=settings.database_settings.dbname,
             us=settings.database_settings.user,
             pas=settings.database_settings.password,

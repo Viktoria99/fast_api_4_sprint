@@ -28,11 +28,11 @@ select_film = """select f.id
                                 where gr.modified > to_timestamp(cast({0} AS TEXT),'YYYY-MM-DD HH24:MI:SS')"""
 
 
-select_one_film = """select id, title, description, rating, modified from content.film_work where id = '{0}'"""
+select_one_film = """select id, title, description, rating as imdb_rating, modified from content.film_work where id = '{0}'"""
 
-select_film_person = 'select p.id, pfw.role, p.full_name, p.modified, p.created from person_film_work pfw join person p on p.id = pfw.person_id where pfw.film_work_id = %s'
+select_film_person = """select p.id, pfw.role, p.full_name, p.modified, p.created from content.person_film_work pfw join content.person p on p.id = pfw.person_id where pfw.film_work_id = '{0}'"""
 
-select_film_genre = 'select distinct g.name from genre_film_work gf join genre g on g.id = gf.genre_id where film_work_id = %s'
+select_film_genre = """select distinct g.name from content.genre_film_work gf join content.genre g on g.id = gf.genre_id where gf.film_work_id = '{0}'"""
 
 
 def get_batch_count(raws: int, batch_size: int) -> int:

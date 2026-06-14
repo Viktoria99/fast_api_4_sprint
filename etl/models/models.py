@@ -14,7 +14,7 @@ class FilmWork(BaseModel, Model):
 
     title: str
     description: str | None
-    rating: float | None
+    imdb_rating: float | None
     modified: datetime_format | None
 
     def __init__(
@@ -22,14 +22,14 @@ class FilmWork(BaseModel, Model):
         id: UUID,
         title: str,
         description: str,
-        rating: float,
+        imdb_rating: float,
         modified: datetime_format,
     ):
         super().__init__(
             id=id,
             title=title,
             description=description,
-            rating=rating,
+            imdb_rating=imdb_rating,
             modified=modified,
         )
 

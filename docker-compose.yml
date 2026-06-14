@@ -32,8 +32,6 @@ services:
     build:
       context: ./etl
       dockerfile: Dockerfile
-    env_file:
-      - ./etl/.env
     depends_on:
       - postgres
       - elasticsearch
