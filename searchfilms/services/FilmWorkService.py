@@ -24,13 +24,15 @@ class FilmWorkService:
                     film_fields['id'],
                     film_fields['title'],
                     film_fields['description'],
-                    film_fields['imdb_rating']
+                    film_fields['imdb_rating'],
                 )
             except NotFoundError:
-                return None
+                raise ValueError(f'Нет фильмов по id = {uuid}')
             except Exception:
                 raise
-        return FilmWork(data['id'], data['title'], data['description'], data['imdb_rating'])
+        return FilmWork(
+            data['id'], data['title'], data['description'], data['imdb_rating']
+        )
 
     async def search_films(
         self, request: FilmRequest
@@ -40,7 +42,7 @@ class FilmWorkService:
             if not films:
                 films = await self.get_films_from_elastic(request)
                 if not films:
-                    return None
+                    raise ValueError(f'Нет фильмов по жанру {request.genre}')
                 filmsCash = [film.model_dump() for film in films]
                 await self.redis_store.saveItems(str(request), filmsCash)
             return films
@@ -71,13 +73,11 @@ class FilmWorkService:
         films: List[FilmWork] = []
         for movie in doc['hits']['hits']:
             film = movie['_source']
-            print('состав movie:')
-            print(str(film))
             film_item = FilmWork(
                 id=film['id'],
                 title=film['title'],
                 description=film['description'],
-                imdb_rating=film['imdb_rating']
+                imdb_rating=film['imdb_rating'],
             )
             films.append(film_item)
         return films

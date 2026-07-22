@@ -4,8 +4,8 @@ from constants import *
 from logger import logger_load
 from models.models import FilmWork, Movie_item
 from psycopg.conninfo import make_conninfo
-from psycopg_pool import ConnectionPool
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 from pydantic_settings import BaseSettings
 from sql_command import *
 from sql_command import get_first

@@ -14,11 +14,9 @@ class FilmRequest(BaseModel):
     ]
     genre: Annotated[
         str,
-        Field(
-            description='Фильтр по жанру', title='genre1', alias='genre'
-        ),
+        Field(description='Фильтр по жанру', title='genre1', alias='genre'),
     ]
-    page_size: int | None = 10
+    page_size: int | None = Field(default=10, ge=1, le=100)
     page_number: int | None = 1
     id: Annotated[
         str, Field(validation_alias=AliasChoices('id', 'uuid'))

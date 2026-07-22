@@ -1,15 +1,13 @@
 from typing import Annotated, List, Optional
 from uuid import UUID
 
-from pydantic import ValidationError
-import traceback
-import sys
-
+from core.http_code import (HTTP_CLIENT_ERROR, HTTP_SERVER_ERROR,
+                            HTTP_VALIDATION_ERROR)
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import ValidationError
 from schemas.FilmRequest import FilmRequest
 from schemas.FilmResponse import FilmResponse
 from services.FilmWorkService import FilmWorkService, film_service_di
-from core.http_code import HTTP_VALIDATION_ERROR, HTTP_SERVER_ERROR
 
 router = APIRouter()
 
@@ -21,39 +19,31 @@ router = APIRouter()
     response_description='Название и рейтинг фильма',
 )
 async def film_search(
-        request: Annotated[FilmRequest, Depends()],
-        film_service: FilmWorkService = Depends(film_service_di)
+    request: Annotated[FilmRequest, Depends()],
+    film_service: FilmWorkService = Depends(film_service_di),
 ) -> List[FilmResponse]:
 
     movies: List[FilmResponse] = []
     try:
         result = await film_service.search_films(request)
         for movie in result:
-            print('movie в API:')
-            print(type(movie))
-            print(movie)
             item = FilmResponse.model_validate(movie)
             movies.append(item)
         return movies
     except ValidationError as exp:
-        stack_message = traceback.extract_stack()
         raise HTTPException(
             status_code=HTTP_VALIDATION_ERROR,
-            detail=f"Ошибка валидации данных: {str(exp)}"
+            detail=f'Ошибка валидации данных: {str(exp)}',
         )
     except ValueError as exp:
         raise HTTPException(
-            status_code=HTTP_VALIDATION_ERROR,
-            detail=f"Ошибка валидации данных в search: {str(exp)}, "
-
+            status_code=HTTP_CLIENT_ERROR,
+            detail=f'Ошибка на стороне клиентского запроса: {str(exp)}, ',
         )
     except Exception as exp:
-        traceback.print_exception(exp, limit=2, file=sys.stdout)
         raise HTTPException(
-            status_code=HTTP_SERVER_ERROR,
-            detail=f"Ошибка сервера в search: {str(exp)}"
+            status_code=HTTP_SERVER_ERROR, detail=f'Ошибка сервера: {str(exp)}'
         )
-
 
 
 @router.get(
@@ -74,13 +64,10 @@ async def film_details(
             )
     except ValueError as exp:
         raise HTTPException(
-            status_code=HTTP_VALIDATION_ERROR,
-            detail=f"Ошибка валидации данных: {str(exp)}, "
-
+            status_code=HTTP_CLIENT_ERROR,
+            detail=f'Ошибка на стороне клиентского запроса: {str(exp)}, ',
         )
     except Exception as exp:
         raise HTTPException(
-            status_code=HTTP_SERVER_ERROR,
-            detail=f"Ошибка сервера: {str(exp)}"
+            status_code=HTTP_SERVER_ERROR, detail=f'Ошибка сервера: {str(exp)}'
         )
-

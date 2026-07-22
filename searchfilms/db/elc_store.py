@@ -32,11 +32,8 @@ class ElcStore:
     async def get(
         self, index_name: str, uuid: str
     ) -> Optional[dict[str, Any]]:
-        try:
-            data = await self.elc_client.get(index=index_name, id=uuid)
-            return data
-        except NotFoundError:
-            raise
+        data = await self.elc_client.get(index=index_name, id=uuid)
+        return data
 
     @backoff.on_exception(
         backoff.expo,
@@ -55,11 +52,8 @@ class ElcStore:
     async def get_films(
         self, index_name: str, query: dict[str, Any]
     ) -> Optional[dict[str, Any]]:
-        try:
-            data = await self.elc_client.search(index=index_name, body=query)
-            return data
-        except NotFoundError:
-            raise
+        data = await self.elc_client.search(index=index_name, body=query)
+        return data
 
 
 def get_elc_store(
