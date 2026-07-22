@@ -1,20 +1,10 @@
-from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, field_validator
-
-
-class Model:
-    id: UUID
+from pydantic import BaseModel, ConfigDict
 
 
-class FilmWork(BaseModel, Model):
+class FilmWork(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, extra='allow')
-
+    id: str
     title: str
     description: str | None
-    rating: float | None
-
-    def __init__(self, id: UUID, title: str, description: str, rating: float):
-        super().__init__(
-            id=id, title=title, description=description, rating=rating
-        )
+    imdb_rating: float | None

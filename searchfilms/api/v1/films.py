@@ -1,20 +1,59 @@
 from typing import Annotated, List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from pydantic import ValidationError
+import traceback
+import sys
+
+from fastapi import APIRouter, Depends, HTTPException
 from schemas.FilmRequest import FilmRequest
 from schemas.FilmResponse import FilmResponse
 from services.FilmWorkService import FilmWorkService, film_service_di
+from core.http_code import HTTP_VALIDATION_ERROR, HTTP_SERVER_ERROR
 
 router = APIRouter()
 
 
-def is_valid_uuid(uuid_to_test, version=4):
+@router.get(
+    '/search',
+    summary='Поиск кинопроизведений',
+    description='Полнотекстовый поиск по кинопроизведениям',
+    response_description='Название и рейтинг фильма',
+)
+async def film_search(
+        request: Annotated[FilmRequest, Depends()],
+        film_service: FilmWorkService = Depends(film_service_di)
+) -> List[FilmResponse]:
+
+    movies: List[FilmResponse] = []
     try:
-        uuid_obj = UUID(uuid_to_test, version=version)
-    except ValueError:
-        return False
-    return str(uuid_obj) == uuid_to_test
+        result = await film_service.search_films(request)
+        for movie in result:
+            print('movie в API:')
+            print(type(movie))
+            print(movie)
+            item = FilmResponse.model_validate(movie)
+            movies.append(item)
+        return movies
+    except ValidationError as exp:
+        stack_message = traceback.extract_stack()
+        raise HTTPException(
+            status_code=HTTP_VALIDATION_ERROR,
+            detail=f"Ошибка валидации данных: {str(exp)}"
+        )
+    except ValueError as exp:
+        raise HTTPException(
+            status_code=HTTP_VALIDATION_ERROR,
+            detail=f"Ошибка валидации данных в search: {str(exp)}, "
+
+        )
+    except Exception as exp:
+        traceback.print_exception(exp, limit=2, file=sys.stdout)
+        raise HTTPException(
+            status_code=HTTP_SERVER_ERROR,
+            detail=f"Ошибка сервера в search: {str(exp)}"
+        )
+
 
 
 @router.get(
@@ -26,32 +65,22 @@ def is_valid_uuid(uuid_to_test, version=4):
 async def film_details(
     film_id: str, film_service: FilmWorkService = Depends(film_service_di)
 ) -> Optional[FilmResponse]:
-    if is_valid_uuid(film_id) == True:
+    try:
+        UUID(film_id, version=4)
         film = await film_service.get_film(film_id)
         if film:
             return FilmResponse(
                 uuid=str(film.id), title=film.title, imdb_rating=film.rating
             )
-    return None
+    except ValueError as exp:
+        raise HTTPException(
+            status_code=HTTP_VALIDATION_ERROR,
+            detail=f"Ошибка валидации данных: {str(exp)}, "
 
+        )
+    except Exception as exp:
+        raise HTTPException(
+            status_code=HTTP_SERVER_ERROR,
+            detail=f"Ошибка сервера: {str(exp)}"
+        )
 
-@router.get(
-    '/',
-    response_model=List[FilmResponse],
-    summary='Поиск кинопроизведений',
-    description='Полнотекстовый поиск по кинопроизведениям',
-    response_description='Название и рейтинг фильма',
-)
-async def film_search(
-    request: Annotated[FilmRequest, Depends()],
-    film_service: FilmWorkService = Depends(film_service_di),
-) -> List[FilmResponse]:
-    movies: List[FilmResponse] = []
-    if request.genre != None:
-        result = await film_service.get_films_from_elastic(request)
-        for movie in result:
-            item = FilmResponse(
-                uuid=str(movie.id), title=movie.title, imdb_rating=movie.rating
-            )
-            movies.append(item)
-    return movies

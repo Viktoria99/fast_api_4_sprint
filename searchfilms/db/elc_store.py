@@ -8,7 +8,6 @@ from fastapi import Depends, Request
 
 
 def get_elastic(request: Request) -> AsyncElasticsearch:
-    print(request.app.state.elastic_client)
     return request.app.state.elastic_client
 
 

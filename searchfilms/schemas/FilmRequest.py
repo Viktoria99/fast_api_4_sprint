@@ -13,13 +13,13 @@ class FilmRequest(BaseModel):
         ),
     ]
     genre: Annotated[
-        str | None,
+        str,
         Field(
-            None, description='Фильтр по жанру', title='genre1', alias='genre'
+            description='Фильтр по жанру', title='genre1', alias='genre'
         ),
     ]
-    page_size: int | None = (50,)
+    page_size: int | None = 10
     page_number: int | None = 1
-    uuid: Annotated[
+    id: Annotated[
         str, Field(validation_alias=AliasChoices('id', 'uuid'))
     ] = 'some_id'

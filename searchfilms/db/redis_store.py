@@ -47,7 +47,7 @@ class RedisStore:
         jitter=backoff.random_jitter,
         logger=logger,
     )
-    async def saveItem(self, key: str, value: dict) -> None:
+    async def saveItems(self, key: str, value: list):
         await self.redis_client.set(key, json.dumps(value), ex=600)
 
 

@@ -40,12 +40,14 @@ services:
       context: ./searchfilms
       dockerfile: Dockerfile
     container_name: fastapi_app
+    image: fastapi-films-image
     ports:
       - "8000:8000"
     env_file:
       - ./searchfilms/.env
     depends_on:
       - elasticsearch
+      - redis
     restart: unless-stopped
   
 volumes:

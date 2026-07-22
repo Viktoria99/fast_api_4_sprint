@@ -6,7 +6,6 @@ from elasticsearch import NotFoundError
 from fastapi import Depends
 from models.FilmWork import FilmWork
 from schemas.FilmRequest import FilmRequest
-from schemas.FilmResponse import FilmResponse
 
 
 class FilmWorkService:
@@ -20,27 +19,33 @@ class FilmWorkService:
             try:
                 film_elc = await self.elc_store.get('movies', uuid)
                 film_fields = film_elc['_source']
-                await self.redis_store.saveItem(uuid, film_fields)
+                await self.redis_store.saveItems(uuid, film_fields)
                 return FilmWork(
                     film_fields['id'],
                     film_fields['title'],
                     film_fields['description'],
-                    film_fields['imdb_rating'],
+                    film_fields['imdb_rating']
                 )
             except NotFoundError:
                 return None
+            except Exception:
+                raise
         return FilmWork(data['id'], data['title'], data['description'], data['imdb_rating'])
 
     async def search_films(
         self, request: FilmRequest
-    ) -> Optional[List[FilmResponse]]:
-        films = await self.redis_store.get(str(request))
-        if not films:
-            films = await self.get_films_from_elastic(request)
+    ) -> Optional[List[FilmWork]]:
+        try:
+            films = await self.redis_store.get(str(request))
             if not films:
-                return None
-            await self.redis_store.saveItem(str(request), films)
-        return films
+                films = await self.get_films_from_elastic(request)
+                if not films:
+                    return None
+                filmsCash = [film.model_dump() for film in films]
+                await self.redis_store.saveItems(str(request), filmsCash)
+            return films
+        except Exception:
+            raise
 
     async def get_films_from_elastic(
         self, request: FilmRequest
@@ -58,17 +63,21 @@ class FilmWorkService:
             doc = await self.elc_store.get_films('movies', query)
         except NotFoundError:
             return None
+        except Exception:
+            raise
 
         if doc['hits']['total']['value'] == 0:
             return None
         films: List[FilmWork] = []
         for movie in doc['hits']['hits']:
             film = movie['_source']
+            print('состав movie:')
+            print(str(film))
             film_item = FilmWork(
-                film['id'],
-                film['title'],
-                film['description'],
-                film['imdb_rating'],
+                id=film['id'],
+                title=film['title'],
+                description=film['description'],
+                imdb_rating=film['imdb_rating']
             )
             films.append(film_item)
         return films
