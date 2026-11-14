@@ -6,4 +6,4 @@ class FilmWork(BaseModel):
     id: str
     title: str
     description: str | None
-    imdb_rating: float | None
+    imdb_rating: float | 0

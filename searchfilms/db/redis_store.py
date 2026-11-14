@@ -5,7 +5,7 @@ import redis
 from core.logger import logger
 from fastapi import Depends, Request
 from redis.asyncio import Redis
-
+from core.settings import settings
 
 def get_redis(request: Request) -> Redis:
     return request.app.state.redis_client
@@ -48,7 +48,7 @@ class RedisStore:
         logger=logger,
     )
     async def saveItems(self, key: str, value: list):
-        await self.redis_client.set(key, json.dumps(value), ex=600)
+        await self.redis_client.set(key, json.dumps(value), ex=settings.redis.cash_time)
 
 
 def get_redis_store(redis: Redis = Depends(get_redis)) -> RedisStore:

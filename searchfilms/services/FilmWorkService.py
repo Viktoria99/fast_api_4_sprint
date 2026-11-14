@@ -6,7 +6,7 @@ from elasticsearch import NotFoundError
 from fastapi import Depends
 from models.FilmWork import FilmWork
 from schemas.FilmRequest import FilmRequest
-
+from core.settings import settings
 
 class FilmWorkService:
     def __init__(self, redis: RedisStore, elc: ElcStore):
@@ -37,7 +37,6 @@ class FilmWorkService:
     async def search_films(
         self, request: FilmRequest
     ) -> Optional[List[FilmWork]]:
-        try:
             films = await self.redis_store.get(str(request))
             if not films:
                 films = await self.get_films_from_elastic(request)
@@ -46,27 +45,19 @@ class FilmWorkService:
                 filmsCash = [film.model_dump() for film in films]
                 await self.redis_store.saveItems(str(request), filmsCash)
             return films
-        except Exception:
-            raise
 
     async def get_films_from_elastic(
         self, request: FilmRequest
     ) -> Optional[List[FilmWork]]:
         query = {}
-        try:
-            if request.sort == '-imdb_rating':
-                query['sort'] = {'imdb_rating': 'desc'}
-            else:
-                query['sort'] = {'imdb_rating': 'asc'}
-            query['query'] = {'term': {'genres': request.genre}}
-            query['from'] = (request.page_number - 1) * request.page_size
-            query['size'] = request.page_size
-
-            doc = await self.elc_store.get_films('movies', query)
-        except NotFoundError:
-            return None
-        except Exception:
-            raise
+        if request.sort == '-imdb_rating':
+            query['sort'] = {'imdb_rating': 'desc'}
+        else:
+            query['sort'] = {'imdb_rating': 'asc'}
+        query['query'] = {'term': {'genres': request.genre}}
+        query['from'] = (request.page_number - 1) * request.page_size
+        query['size'] = request.page_size
+        doc = await self.elc_store.get_films(settings.elastic.index, query)
 
         if doc['hits']['total']['value'] == 0:
             return None
